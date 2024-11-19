@@ -1,0 +1,83 @@
+<html lang="ru">
+<header>
+    <meta charset="UTF-8">
+    <title>Поиск объектов недвижимости</title>
+</header>
+<body>
+<div>
+    <div>
+        <label for="captcha">Каптча</label>
+        <input id="captcha"/>
+        <img src="captcha.png?123" alt="captcha" id="captchaImage"/>
+        <button onclick="updateCaptcha()">Обновить</button>
+    </div>
+
+    <div>
+        <label for="type">Тип</label>
+        <select id="type">
+            <option value="002001001000">Земельный участок</option>
+            <option value="002001002000">Здание</option>
+            <option value="002001003000">Помещение</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="number">Номер</label>
+        <input id="number"/>
+    </div>
+
+    <div>
+        <button onclick="getResponse()">Найти</button>
+    </div>
+
+    <div>
+        <pre id="result">Результат...</pre>
+    </div>
+
+</div>
+</body>
+<style>
+    div {
+        border: 1px solid #55ffdd44;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 4px;
+        background: #55ffdd11;
+
+    }
+</style>
+<script>
+    function updateCaptcha() {
+        document.getElementById('captchaImage').src = '/captcha.png?' + Math.random();
+        document.getElementById('captcha').value = '';
+    }
+
+    function getResponse() {
+        const number  = document.getElementById('number').value;
+        const type    = document.getElementById('type').value;
+        const captcha = document.getElementById('captcha').value;
+
+        const formData = new FormData();
+        formData.append('number', number);
+        formData.append('type', type);
+        formData.append('captcha', captcha);
+
+        fetch('/request', {
+            method: 'POST',
+            body:   formData,
+
+        })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('result').textContent = data;
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                document.getElementById('result').textContent = 'Произошла ошибка при выполнении запроса';
+            })
+            .finally(() => {
+                updateCaptcha();
+            });
+    }
+</script>
+</html>
