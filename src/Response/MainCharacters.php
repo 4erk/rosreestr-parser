@@ -8,5 +8,5 @@ class MainCharacters
     public ?string $description;     // Описание характеристики
     public ?string $unitCode;        // Код единицы измерения
     public ?string $unitDescription; // Описание единицы измерения
-    public mixed $value;             // Значение характеристики
+    public null|int|float|string $value;             // Значение характеристики
 }
