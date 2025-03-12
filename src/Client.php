@@ -42,6 +42,7 @@ class Client
                 'User-Agent' => self::USER_AGENT,
             ],
             RequestOptions::COOKIES => $this->cookieJar,
+
             RequestOptions::VERIFY => false
         ]);
         $this->cookieJar->save($this->cookiePath);

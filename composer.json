@@ -25,12 +25,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Rosreestr\\Parser\\": "../src"
+            "Rosreestr\\Parser\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Rosreestr\\Parser\\Tests\\": "../tests"
+            "Rosreestr\\Parser\\Tests\\": "tests"
         }
     },
     "config": {
@@ -41,7 +41,7 @@
         }
     },
     "scripts": {
-        "test": "../vendor/bin/phpunit --testdox --no-interaction",
-        "test-watch": "../vendor/bin/phpunit-watcher watch"
+        "test": "vendor/bin/phpunit --testdox --no-interaction",
+        "test-watch": "vendor/bin/phpunit-watcher watch"
     }
 }
