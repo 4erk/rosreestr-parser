@@ -1,6 +1,7 @@
 <?php
 
 use GuzzleHttp\Exception\GuzzleException;
+use Rosreestr\Parser\AddressSearchClient;
 use Rosreestr\Parser\Client;
 use Rosreestr\Parser\NumberRequest;
 use Swoole\Http\Server;
@@ -49,6 +50,10 @@ $http->on('request', function ($request, $response) {
                 $response->end(print_r($result, true));
             }
             break;
+        case '/address':
+            $client = new AddressSearchClient();
+            $result = $client->search($request->post['address']);
+            $response->end(print_r($result, true));
     }
 
 });

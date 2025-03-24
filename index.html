@@ -31,6 +31,12 @@
     </div>
 
     <div>
+        <label for="address">Адрес</label>
+        <input id="address"/>
+        <button onclick="getResponseAddress()">Найти</button>
+    </div>
+
+    <div>
         <pre id="result">Результат...</pre>
     </div>
 
@@ -49,7 +55,7 @@
 <script>
     function updateCaptcha() {
         document.getElementById('captchaImage').src = '/captcha.png?' + Math.random();
-        document.getElementById('captcha').value = '';
+        document.getElementById('captcha').value    = '';
     }
 
     function getResponse() {
@@ -78,6 +84,22 @@
             .finally(() => {
                 updateCaptcha();
             });
+    }
+
+    function getResponseAddress() {
+        const address  = document.getElementById('address').value;
+        const formData = new FormData();
+        formData.append('address', address);
+        fetch('/address', {
+            method: 'POST',
+            body:   formData,
+        }).then(response => response.text()).then(data => {
+            document.getElementById('result').textContent = data;
+        })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                document.getElementById('result').textContent = 'Произошла ошибка при выполнении запроса';
+            })
     }
 </script>
 </html>
