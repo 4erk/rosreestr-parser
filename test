@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+
+use GuzzleHttp\Exception\GuzzleException;
+use Rosreestr\Parser\Client;
+use Rosreestr\Parser\Proxy\ProxyManager;
+
+$manager = ProxyManager::loadFromFile(__DIR__ . '/data/proxies.txt');
+$client = new Client(__DIR__ . '/data/cookies.txt', $manager);
+
+
+foreach ($client->manager->proxies as $proxy) {
+    try {
+        $client->getCaptcha();
+        echo 'Success'.PHP_EOL;
+    } catch (GuzzleException $e) {
+        echo 'Error: '. $e->getMessage(). PHP_EOL;
+    }
+    $client->updateProxy();
+}
+

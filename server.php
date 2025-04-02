@@ -4,6 +4,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Rosreestr\Parser\AddressSearchClient;
 use Rosreestr\Parser\Client;
 use Rosreestr\Parser\NumberRequest;
+use Rosreestr\Parser\Proxy\ProxyManager;
 use Swoole\Http\Server;
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -22,7 +23,8 @@ $http->on('request', function ($request, $response) {
 
         case '/captcha.png':
             // Получение и отправка изображения капчи
-            $client = new Client(__DIR__ . '/cookies.txt');
+            $manager = ProxyManager::loadFromFile(__DIR__ . '/data/proxies.txt');
+            $client = new Client(__DIR__ . '/cookies.txt',$manager);
             $captcha = $client->getCaptcha();
             $captcha->save('captcha.png');
             $response->header('Content-Type', 'image/png');
@@ -31,7 +33,8 @@ $http->on('request', function ($request, $response) {
 
         case '/request':
             // Обработка запроса к API Росреестра
-            $client = new Client(__DIR__ . '/cookies.txt');
+            $manager = ProxyManager::loadFromFile(__DIR__ . '/data/proxies.txt');
+            $client = new Client(__DIR__ . '/cookies.txt',$manager);
             $number = $request->post['number'];
             $objectType = $request->post['type'];
             $captcha = $request->post['captcha'];
