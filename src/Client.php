@@ -69,6 +69,7 @@ class Client
         ]);
         $response = $this->client->post('/account-back/on', [
             RequestOptions::PROXY =>  $this->manager?->getProxy(),
+            RequestOptions::JSON => $request->toParams(),
         ]);
         $this->cookieJar->save($this->cookiePath);
         $data = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
