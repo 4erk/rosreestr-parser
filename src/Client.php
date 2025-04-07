@@ -32,6 +32,8 @@ class Client
             'base_uri'              => 'https://lk.rosreestr.ru/',
             RequestOptions::COOKIES => $this->cookieJar,
             RequestOptions::VERIFY  => false,
+            RequestOptions::TIMEOUT => 60,
+            RequestOptions::CONNECT_TIMEOUT => 60,
             RequestOptions::HEADERS => [
                 'User-Agent' => self::USER_AGENT,
             ],
