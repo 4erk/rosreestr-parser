@@ -45,5 +45,5 @@ class ObjectItem
     public ?string $regionKey;             // Код региона
     public ?string $status;                // Статус объекта
     public ?string $undergroundFloor;      // Подземный этаж
-    public ?string $additional;            // Дополнительно
+    public ?array $additional;            // Дополнительно
 }
