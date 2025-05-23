@@ -25,6 +25,7 @@ class ObjectItem
     public ?int $cancelDate;               // Дата снятия с кадастрового учета
     public ?string $childCadNumbers;       // Кадастровые номера дочерних объектов
     public ?string $databaseName;          // Название базы данных
+    /** @var Encumbrance[]  */
     public array $encumbrances = [];       // Обременения на объект
     public ?string $floor;                 // Этаж
     public ?int $infoUpdateDate;           // Дата обновления информации

@@ -2,6 +2,7 @@
 
 namespace Rosreestr\Parser;
 
+use Rosreestr\Parser\Response\Encumbrance;
 use Rosreestr\Parser\Response\MainCharacters;
 use Rosreestr\Parser\Response\ObjectItem;
 use Rosreestr\Parser\Response\OldNumber;
@@ -74,6 +75,7 @@ class Response
             'mainCharacters' => MainCharacters::class,
             'oldNumbers' => OldNumber::class,
             'rights' => Right::class,
+            'encumbrances' => Encumbrance::class,
         ];
 
         foreach ($propertiesToHydrate as $property => $class) {
