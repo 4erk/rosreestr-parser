@@ -23,7 +23,8 @@ class ObjectItem
     public ?string $cadNumber;             // Кадастровый номер объекта
     public ?string $cadQuarter;            // Кадастровый квартал
     public ?int $cancelDate;               // Дата снятия с кадастрового учета
-    public ?string $childCadNumbers;       // Кадастровые номера дочерних объектов
+    /** @var string[]|null  */
+    public ?array $childCadNumbers;       // Кадастровые номера дочерних объектов
     public ?string $databaseName;          // Название базы данных
     /** @var Encumbrance[]  */
     public array $encumbrances = [];       // Обременения на объект
