@@ -79,12 +79,14 @@ class Response
         ];
 
         foreach ($propertiesToHydrate as $property => $class) {
-            if ($item->$property) {
-                $item->$property = array_map(
-                    static fn($data) => $hydrator->create($class, $data),
-                    $item->$property
-                );
+            if ($item->$property === null || $item->$property === []) {
+                continue;
             }
+
+            $item->$property = array_map(
+                static fn($data) => $hydrator->create($class, $data),
+                $item->$property
+            );
         }
 
         return $item;
