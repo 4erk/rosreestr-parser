@@ -4,13 +4,13 @@ namespace Rosreestr\Parser\Response;
 
 class ObjectItem
 {
-    public ?Address $address;           // Адрес объекта
-    /** @var MainCharacters[] */
-    public ?array $mainCharacters = []; // Основные характеристики объекта
-    /** @var OldNumber[] */
-    public ?array $oldNumbers = [];   // Старые номера объекта
-    /** @var Right[] */
-    public ?array $rights = [];       // Права на объект
+    public ?Address $address = null;     // Адрес объекта
+    /** @var MainCharacters[]|null */
+    public ?array $mainCharacters = null; // Основные характеристики объекта
+    /** @var OldNumber[]|null */
+    public ?array $oldNumbers = null;     // Старые номера объекта
+    /** @var Right[]|null */
+    public ?array $rights = null;         // Права на объект
 
     public ?string $area;                  // Площадь объекта
     public ?string $cadCost;               // Кадастровая стоимость
@@ -26,8 +26,8 @@ class ObjectItem
     /** @var string[]|null  */
     public ?array $childCadNumbers;       // Кадастровые номера дочерних объектов
     public ?string $databaseName;          // Название базы данных
-    /** @var Encumbrance[]  */
-    public array $encumbrances = [];       // Обременения на объект
+    /** @var Encumbrance[]|null */
+    public ?array $encumbrances = null;    // Обременения на объект
     public ?string $floor;                 // Этаж
     public ?int $infoUpdateDate;           // Дата обновления информации
     public ?string $landCategory;          // Категория земель
