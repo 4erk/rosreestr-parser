@@ -10,8 +10,8 @@
         }
     ],
     "require": {
-        "php": "^8.3",
-        "guzzlehttp/guzzle": "^7.9.2",
+        "php": "^8.2",
+        "guzzlehttp/guzzle": "^7.15.2",
         "yiisoft/hydrator": "^1.5"
     },
     "require-dev": {
