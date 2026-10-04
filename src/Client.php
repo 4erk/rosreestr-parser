@@ -25,6 +25,18 @@ class Client
      *
      * @param string $cookiePath Путь для сохранения файла куки
      */
+    public static function fromEnvironment(
+        string $cookiePath,
+        string $variable = 'ROSREESTR_PROXY',
+    ): self {
+        $proxy = getenv($variable);
+
+        return new self(
+            $cookiePath,
+            ProxyManager::fromString($proxy === false ? null : $proxy),
+        );
+    }
+
     public function __construct(private readonly string $cookiePath, public ?ProxyManager $manager = null)
     {
         $this->cookieJar = new FileCookieJar($this->cookiePath, true);
@@ -80,6 +92,6 @@ class Client
 
     public function updateProxy(): void
     {
-        $this->manager->next();
+        $this->manager?->next();
     }
 }

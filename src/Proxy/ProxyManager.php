@@ -10,23 +10,37 @@ class ProxyManager
     {
     }
 
-
     public function next(): void
     {
-        $this->counter++;
+        if ($this->proxies !== []) {
+            $this->counter++;
+        }
     }
 
-    public function getProxy(): string {
+    public function getProxy(): ?string
+    {
+        if ($this->proxies === []) {
+            return null;
+        }
+
         $i = $this->counter % count($this->proxies);
+
         return $this->proxies[$i];
     }
 
-    public static function loadFromFile(string $path):self {
-        $proxies = file($path);
-        $proxies = array_map('trim', $proxies);
-        $proxies = array_filter($proxies, static fn($item) => $item);
-        return new self($proxies);
+    public static function fromString(?string $proxy): ?self
+    {
+        $proxy = trim((string) $proxy);
+
+        return $proxy === '' ? null : new self([$proxy]);
     }
 
+    public static function loadFromFile(string $path): self
+    {
+        $proxies = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+        $proxies = array_map('trim', $proxies);
+        $proxies = array_values(array_filter($proxies, static fn (string $item): bool => $item !== ''));
 
+        return new self($proxies);
+    }
 }
