@@ -13,6 +13,7 @@ final class ClientProxyTest extends TestCase
         putenv('ROSREESTR_PROXY');
         putenv('ROSREESTR_RELAY_URL');
         putenv('ROSREESTR_RELAY_TOKEN');
+        putenv('ROSREESTR_RELAY_PRIVATE_KEY');
     }
 
     public function testEnvironmentTransportIsOptional(): void
@@ -42,6 +43,18 @@ final class ClientProxyTest extends TestCase
         putenv('ROSREESTR_PROXY=http://proxy.example:3128');
         putenv('ROSREESTR_RELAY_URL=https://example.test/relay.php');
         putenv('ROSREESTR_RELAY_TOKEN=secret-token');
+
+        $client = Client::fromEnvironment($this->cookiePath());
+
+        self::assertNull($client->manager);
+        self::assertTrue($client->isRelayEnabled());
+    }
+
+
+    public function testRelayPrivateKeyConfigurationEnablesRelay(): void
+    {
+        putenv('ROSREESTR_RELAY_URL=https://example.test/relay.php');
+        putenv('ROSREESTR_RELAY_PRIVATE_KEY=/tmp/relay-private.pem');
 
         $client = Client::fromEnvironment($this->cookiePath());
 

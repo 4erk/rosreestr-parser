@@ -10,6 +10,7 @@ use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
 use JsonException;
 use Rosreestr\Parser\Proxy\ProxyManager;
+use RuntimeException;
 
 /**
  * Client for the Rosreestr API.
@@ -23,6 +24,7 @@ class Client
     private ?HttpClient $relayClient = null;
     private ?string $relayUrl = null;
     private ?string $relayToken = null;
+    private ?string $relayPrivateKeyPath = null;
     private ?string $relaySession = null;
 
     public function __construct(
@@ -30,19 +32,28 @@ class Client
         public ?ProxyManager $manager = null,
         ?string $relayUrl = null,
         ?string $relayToken = null,
+        ?string $relayPrivateKeyPath = null,
     ) {
         $relayUrl = self::normalizeOptional($relayUrl);
         $relayToken = self::normalizeOptional($relayToken);
+        $relayPrivateKeyPath = self::normalizeOptional($relayPrivateKeyPath);
 
-        if (($relayUrl === null) !== ($relayToken === null)) {
+        if ($relayUrl === null && ($relayToken !== null || $relayPrivateKeyPath !== null)) {
             throw new InvalidArgumentException(
-                'Rosreestr relay URL and token must be configured together.',
+                'Rosreestr relay URL is required when relay authentication is configured.',
+            );
+        }
+
+        if ($relayUrl !== null && $relayToken === null && $relayPrivateKeyPath === null) {
+            throw new InvalidArgumentException(
+                'Rosreestr relay requires a token or private signing key.',
             );
         }
 
         if ($relayUrl !== null) {
             $this->relayUrl = $relayUrl;
             $this->relayToken = $relayToken;
+            $this->relayPrivateKeyPath = $relayPrivateKeyPath;
             $this->relaySession = hash('sha256', $cookiePath);
             $this->relayClient = new HttpClient([
                 RequestOptions::TIMEOUT => 60,
@@ -71,16 +82,19 @@ class Client
         string $proxyVariable = 'ROSREESTR_PROXY',
         string $relayUrlVariable = 'ROSREESTR_RELAY_URL',
         string $relayTokenVariable = 'ROSREESTR_RELAY_TOKEN',
+        string $relayPrivateKeyVariable = 'ROSREESTR_RELAY_PRIVATE_KEY',
     ): self {
         $relayUrl = self::environmentValue($relayUrlVariable);
         $relayToken = self::environmentValue($relayTokenVariable);
+        $relayPrivateKey = self::environmentValue($relayPrivateKeyVariable);
 
-        if ($relayUrl !== null || $relayToken !== null) {
+        if ($relayUrl !== null || $relayToken !== null || $relayPrivateKey !== null) {
             return new self(
                 $cookiePath,
                 null,
                 $relayUrl,
                 $relayToken,
+                $relayPrivateKey,
             );
         }
 
@@ -103,7 +117,7 @@ class Client
         if ($this->relayClient !== null) {
             $response = $this->relayClient->get($this->relayUrl, [
                 RequestOptions::QUERY => ['action' => 'captcha'],
-                RequestOptions::HEADERS => $this->relayHeaders(),
+                RequestOptions::HEADERS => $this->relayHeaders('GET', 'captcha', ''),
             ]);
 
             return new Captcha($response->getBody()->getContents());
@@ -124,10 +138,18 @@ class Client
     public function sendRequest(RequestInterface $request): Response
     {
         if ($this->relayClient !== null) {
+            $payload = json_encode(
+                $request->toParams(),
+                JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR,
+            );
+
             $response = $this->relayClient->post($this->relayUrl, [
                 RequestOptions::QUERY => ['action' => 'search'],
-                RequestOptions::HEADERS => $this->relayHeaders(),
-                RequestOptions::JSON => $request->toParams(),
+                RequestOptions::HEADERS => array_merge(
+                    $this->relayHeaders('POST', 'search', $payload),
+                    ['Content-Type' => 'application/json'],
+                ),
+                RequestOptions::BODY => $payload,
             ]);
 
             $data = json_decode(
@@ -165,13 +187,76 @@ class Client
         $this->manager?->next();
     }
 
-    private function relayHeaders(): array
+    private function relayHeaders(string $method, string $action, string $body): array
     {
-        return [
-            'X-Rosreestr-Relay-Token' => $this->relayToken,
+        $headers = [
             'X-Rosreestr-Session' => $this->relaySession,
             'Accept' => 'application/json, image/png',
         ];
+
+        if ($this->relayPrivateKeyPath !== null) {
+            return array_merge(
+                $headers,
+                $this->relaySignatureHeaders($method, $action, $body),
+            );
+        }
+
+        $headers['Authorization'] = 'Bearer ' . $this->relayToken;
+
+        return $headers;
+    }
+
+    private function relaySignatureHeaders(string $method, string $action, string $body): array
+    {
+        if (!is_readable($this->relayPrivateKeyPath)) {
+            throw new RuntimeException('Rosreestr relay private key is not readable.');
+        }
+
+        $privateKey = openssl_pkey_get_private(
+            (string) file_get_contents($this->relayPrivateKeyPath),
+        );
+        if ($privateKey === false) {
+            throw new RuntimeException('Rosreestr relay private key is invalid.');
+        }
+
+        $timestamp = (string) time();
+        $nonce = bin2hex(random_bytes(16));
+        $canonical = self::relayCanonicalRequest(
+            $method,
+            $action,
+            (string) $this->relaySession,
+            $timestamp,
+            $nonce,
+            $body,
+        );
+
+        if (!openssl_sign($canonical, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
+            throw new RuntimeException('Could not sign Rosreestr relay request.');
+        }
+
+        return [
+            'X-Rosreestr-Timestamp' => $timestamp,
+            'X-Rosreestr-Nonce' => $nonce,
+            'X-Rosreestr-Signature' => base64_encode($signature),
+        ];
+    }
+
+    public static function relayCanonicalRequest(
+        string $method,
+        string $action,
+        string $session,
+        string $timestamp,
+        string $nonce,
+        string $body,
+    ): string {
+        return implode("\n", [
+            strtoupper($method),
+            $action,
+            $session,
+            $timestamp,
+            $nonce,
+            hash('sha256', $body),
+        ]);
     }
 
     private static function environmentValue(string $name): ?string

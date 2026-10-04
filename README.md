@@ -20,6 +20,10 @@ For a development environment that cannot reach Rosreestr directly, use a restri
 ```
 ROSREESTR_RELAY_URL=https://example.com/reestr_rest/relay.php
 ROSREESTR_RELAY_TOKEN=secret
+
+For stronger development relay authentication, use a local RSA private key instead of a shared token:
+
+ROSREESTR_RELAY_PRIVATE_KEY=/path/to/private.pem
 ```
 
 A standard Guzzle HTTP proxy is also supported:
