@@ -168,7 +168,7 @@ class Client
     private function relayHeaders(): array
     {
         return [
-            'Authorization' => 'Bearer ' . $this->relayToken,
+            'X-Rosreestr-Relay-Token' => $this->relayToken,
             'X-Rosreestr-Session' => $this->relaySession,
             'Accept' => 'application/json, image/png',
         ];
