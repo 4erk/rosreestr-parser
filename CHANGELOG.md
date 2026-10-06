@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+- Route address search through the same signed relay/proxy environment as cadastral requests.
+- Add bounded address-search connect/request timeouts and stop returning false empty results on transport failure.
+- Extract shared RSA relay signing into RelaySigner.
+
 ## 1.1.0
 
 - Add RSA-SHA256 signed relay requests for development environments without direct Rosreestr access.

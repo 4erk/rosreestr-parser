@@ -10,7 +10,7 @@ use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
 use JsonException;
 use Rosreestr\Parser\Proxy\ProxyManager;
-use RuntimeException;
+use Rosreestr\Parser\Relay\RelaySigner;
 
 /**
  * Client for the Rosreestr API.
@@ -24,7 +24,7 @@ class Client
     private ?HttpClient $relayClient = null;
     private ?string $relayUrl = null;
     private ?string $relayToken = null;
-    private ?string $relayPrivateKeyPath = null;
+    private ?RelaySigner $relaySigner = null;
     private ?string $relaySession = null;
 
     public function __construct(
@@ -53,8 +53,15 @@ class Client
         if ($relayUrl !== null) {
             $this->relayUrl = $relayUrl;
             $this->relayToken = $relayToken;
-            $this->relayPrivateKeyPath = $relayPrivateKeyPath;
             $this->relaySession = hash('sha256', $cookiePath);
+
+            if ($relayPrivateKeyPath !== null) {
+                $this->relaySigner = new RelaySigner(
+                    $relayPrivateKeyPath,
+                    $this->relaySession,
+                );
+            }
+
             $this->relayClient = new HttpClient([
                 RequestOptions::TIMEOUT => 60,
                 RequestOptions::CONNECT_TIMEOUT => 60,
@@ -194,51 +201,16 @@ class Client
             'Accept' => 'application/json, image/png',
         ];
 
-        if ($this->relayPrivateKeyPath !== null) {
+        if ($this->relaySigner !== null) {
             return array_merge(
                 $headers,
-                $this->relaySignatureHeaders($method, $action, $body),
+                $this->relaySigner->headers($method, $action, $body),
             );
         }
 
         $headers['Authorization'] = 'Bearer ' . $this->relayToken;
 
         return $headers;
-    }
-
-    private function relaySignatureHeaders(string $method, string $action, string $body): array
-    {
-        if (!is_readable($this->relayPrivateKeyPath)) {
-            throw new RuntimeException('Rosreestr relay private key is not readable.');
-        }
-
-        $privateKey = openssl_pkey_get_private(
-            (string) file_get_contents($this->relayPrivateKeyPath),
-        );
-        if ($privateKey === false) {
-            throw new RuntimeException('Rosreestr relay private key is invalid.');
-        }
-
-        $timestamp = (string) time();
-        $nonce = bin2hex(random_bytes(16));
-        $canonical = self::relayCanonicalRequest(
-            $method,
-            $action,
-            (string) $this->relaySession,
-            $timestamp,
-            $nonce,
-            $body,
-        );
-
-        if (!openssl_sign($canonical, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
-            throw new RuntimeException('Could not sign Rosreestr relay request.');
-        }
-
-        return [
-            'X-Rosreestr-Timestamp' => $timestamp,
-            'X-Rosreestr-Nonce' => $nonce,
-            'X-Rosreestr-Signature' => base64_encode($signature),
-        ];
     }
 
     public static function relayCanonicalRequest(
@@ -249,14 +221,14 @@ class Client
         string $nonce,
         string $body,
     ): string {
-        return implode("\n", [
-            strtoupper($method),
+        return RelaySigner::canonicalRequest(
+            $method,
             $action,
             $session,
             $timestamp,
             $nonce,
-            hash('sha256', $body),
-        ]);
+            $body,
+        );
     }
 
     private static function environmentValue(string $name): ?string

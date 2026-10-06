@@ -33,3 +33,5 @@ ROSREESTR_PROXY=http://user:password@proxy.example:3128
 ```
 
 Create the client with `Client::fromEnvironment($cookiePath)`. Relay configuration takes precedence over proxy configuration; when neither is set, direct transport is used.
+
+Address search uses the same transport selection via `AddressSearchClient::fromEnvironment()`. Address requests use bounded timeouts and propagate transport failures instead of returning a misleading empty result.
