@@ -2,8 +2,14 @@
 
 namespace Rosreestr\Parser\Tests;
 
+use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 use Rosreestr\Parser\AddressSearchClient;
 
 final class AddressSearchClientTest extends TestCase
@@ -61,5 +67,49 @@ final class AddressSearchClientTest extends TestCase
         $client = new AddressSearchClient(maxAttempts: 1);
 
         self::assertSame([], $client->search('   '));
+    }
+
+    public function testRateLimitResponseIsNotRetried(): void
+    {
+        $mock = new MockHandler([
+            new Response(429, [], '{"error":"rate limited"}'),
+            new Response(200, [], '[]'),
+        ]);
+        $client = $this->clientWithMockHandler($mock, 2);
+
+        try {
+            $client->search('Москва, Тверская улица, 1');
+            self::fail('Expected a 429 client exception.');
+        } catch (ClientException $exception) {
+            self::assertSame(429, $exception->getResponse()->getStatusCode());
+        }
+
+        self::assertCount(1, $mock);
+    }
+
+    public function testServerErrorCanStillBeRetried(): void
+    {
+        $mock = new MockHandler([
+            new Response(503, [], '{"error":"temporary"}'),
+            new Response(200, [], '[]'),
+        ]);
+        $client = $this->clientWithMockHandler($mock, 2);
+
+        self::assertSame([], $client->search('Москва, Тверская улица, 1'));
+        self::assertCount(0, $mock);
+    }
+
+    private function clientWithMockHandler(MockHandler $mock, int $maxAttempts): AddressSearchClient
+    {
+        $client = new AddressSearchClient(maxAttempts: $maxAttempts);
+        $httpClient = new HttpClient([
+            'handler' => HandlerStack::create($mock),
+            'base_uri' => 'https://lk.rosreestr.ru/',
+        ]);
+
+        $property = new ReflectionProperty(AddressSearchClient::class, 'client');
+        $property->setValue($client, $httpClient);
+
+        return $client;
     }
 }

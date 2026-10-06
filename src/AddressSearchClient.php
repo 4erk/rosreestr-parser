@@ -4,6 +4,7 @@ namespace Rosreestr\Parser;
 
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
 use JsonException;
@@ -127,11 +128,13 @@ class AddressSearchClient
                 return $this->searchOnce($address);
             } catch (GuzzleException $e) {
                 $lastException = $e;
-                $this->manager?->next();
 
-                if ($attempt + 1 < $this->maxAttempts) {
-                    usleep(250_000);
+                if (!$this->shouldRetry($e) || $attempt + 1 >= $this->maxAttempts) {
+                    break;
                 }
+
+                $this->manager?->next();
+                usleep(250_000);
             }
         }
 
@@ -181,6 +184,15 @@ class AddressSearchClient
             static fn (array $item): AddressItem => AddressItem::createFromArray($item),
             $data,
         );
+    }
+
+    private function shouldRetry(GuzzleException $exception): bool
+    {
+        if (!$exception instanceof RequestException || !$exception->hasResponse()) {
+            return true;
+        }
+
+        return $exception->getResponse()->getStatusCode() >= 500;
     }
 
     private function relayHeaders(string $method, string $action, string $body): array
