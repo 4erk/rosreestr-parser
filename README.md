@@ -6,7 +6,7 @@ Development and releases are owned by `4erk/rosreestr-parser`.
 
 - `origin` → `4erk/rosreestr-parser` — work/original repository.
 - `upstream` → `goskadastr/rosreestr-parser`, release branch `main`.
-- `medialuki` → `medialuki/parser-poiska-rr`, release branch `dev` (the repository's default branch).
+- `medialuki` → `medialuki/parser-poiska-rr`, release branch `main`.
 
 The package name stays `rosreestr/parser` in every distribution repository. The distribution branches are mirrors of released parser history; normal development happens only in `origin`.
 
