@@ -5,3 +5,5 @@
 /.phpunit.result.cache
 /captcha.png
 /cookies.txt
+
+/.phpunit.cache/

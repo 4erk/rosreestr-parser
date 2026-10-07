@@ -1,3 +1,30 @@
+[Reading 56 lines from start (total: 56 lines, 0 remaining)]
+
+## Repository topology
+
+Development and releases are owned by `4erk/rosreestr-parser`.
+
+- `origin` → `4erk/rosreestr-parser` — work/original repository.
+- `upstream` → `goskadastr/rosreestr-parser`, release branch `main`.
+- `medialuki` → `medialuki/parser-poiska-rr`, release branch `dev` (the repository's default branch).
+
+The package name stays `rosreestr/parser` in every distribution repository. The distribution branches are mirrors of released parser history; normal development happens only in `origin`.
+
+With dev-flow v0.2.0+, `.dev-flow/config.sh` publishes each SemVer release to both upstreams using non-force pushes. Before releasing, inspect the relationships with:
+
+```bash
+dev upstream status
+```
+
+A release is refused when any configured upstream branch has diverged from the current release branch. After a transient or partial publication failure, `dev upstream publish` safely retries the exact existing SemVer tag.
+
+For a fresh local clone, configure both distribution remotes before release publication:
+
+```bash
+git remote add upstream git@github.com:goskadastr/rosreestr-parser.git
+git remote add medialuki git@github.com:medialuki/parser-poiska-rr.git
+```
+
 **PHPStorm**
 ---------
 
@@ -54,3 +81,5 @@ ROSREESTR_ADDRESS_RATE_STATE_DIR=/path/to/shared/runtime-state
 ```
 
 Rate limiting raises `Rosreestr\Parser\Exception\RateLimitException`, which exposes `retryAfterSeconds` and an opaque route identifier suitable for logs.
+
+[executed on device: 4ERK-PC (e18afdfd-0125-49be-beb0-0f9bbac46842)]
