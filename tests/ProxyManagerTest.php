@@ -40,4 +40,18 @@ final class ProxyManagerTest extends TestCase
         self::assertNotNull($manager);
         self::assertSame('http://user:pass@proxy:18890', $manager->getProxy());
     }
+
+    public function testFromStringCreatesRotatingProxyList(): void
+    {
+        $manager = ProxyManager::fromString(
+            "http://proxy-one:3128, http://proxy-two:3128\nhttp://proxy-three:3128",
+        );
+
+        self::assertNotNull($manager);
+        self::assertSame(3, $manager->count());
+        self::assertTrue($manager->hasMultiple());
+        self::assertSame('http://proxy-one:3128', $manager->getProxy());
+        $manager->next();
+        self::assertSame('http://proxy-two:3128', $manager->getProxy());
+    }
 }
